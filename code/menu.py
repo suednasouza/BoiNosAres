@@ -24,7 +24,7 @@ class Menu:
 
         while running:
             self.clock.tick(60)
-            self.window.blit(self.surf, self.rect)  # fundo
+            self.window.blit(self.surf, self.rect)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -37,14 +37,13 @@ class Menu:
                     elif event.key == pygame.K_RETURN:
                         return options[selected]
 
-            self.window.blit(source=self.surf, dest=self.rect)
-            self.menu_text(50, "Boi nos Ares", C_WHITE, ((WIN_WIDTH / 2), 70))
+            self.menu_text(60, "Boi nos Ares", C_WHITE, ((WIN_WIDTH / 2), 70))
 
             for i, option in enumerate(options):
                 color = C_GREEN if i == selected else (255, 255, 255)
                 x = WIN_WIDTH // 2
                 y = WIN_HEIGHT // 2 + i * 60
-                self.menu_text(26, option, color, (x, y))
+                self.menu_text(40, option, color, (x, y))
 
             pygame.display.flip()
 

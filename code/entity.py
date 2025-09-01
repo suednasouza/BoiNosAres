@@ -12,7 +12,6 @@ class Entity(ABC):
             self.surf = pygame.Surface((50,50))
             self.surf.fill((255,0,0))
         self.rect = self.surf.get_rect(topleft=position)
-        self.vel = 0
 
     @abstractmethod
     def move(self):

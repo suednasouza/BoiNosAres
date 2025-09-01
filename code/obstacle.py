@@ -2,29 +2,24 @@ import pygame
 import random
 from code.const import OBSTACLE1, OBSTACLE2, WIN_HEIGHT
 
-
 class Obstacle:
-    def __init__(self, x, obstacle_type="fence", width=70, gap=150):
-        """
-        obstacle_type: "fence" (bottom) ou "cloud" (top)
-        """
+    def __init__(self, x, obstacle_type="fence", width=100, gap=150):
         self.type = obstacle_type
         self.width = width
-        self.gap = gap
-        self.speed = 3
+        self.speed = 5
 
         if self.type == "fence":
             self.image = pygame.image.load(OBSTACLE1).convert_alpha()
-            self.image = pygame.transform.scale(self.image, (self.width, 400))
-            self.height = random.randint(100, 200)
+            self.image = pygame.transform.scale(self.image, (self.width, random.randint(100, 300)))
+            self.height = self.image.get_height()
             self.top_rect = None
             self.bottom_rect = pygame.Rect(x, WIN_HEIGHT - self.height, self.width, self.height)
 
         elif self.type == "cloud":
+            cloud_width = random.randint(100, 200)
             self.image = pygame.image.load(OBSTACLE2).convert_alpha()
-            self.image = pygame.transform.scale(self.image, (self.width, 100))
-            self.height = random.randint(50, 150)
-            self.top_rect = pygame.Rect(x, 0, self.width, self.height)
+            self.image = pygame.transform.scale(self.image, (cloud_width, 150))
+            self.top_rect = pygame.Rect(x, 0, cloud_width, self.image.get_height())
             self.bottom_rect = None
 
     def update(self):

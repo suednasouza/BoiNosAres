@@ -1,118 +1,154 @@
 import pygame
-import random
+from pygame import Surface, Rect, font
+from pygame.font import Font
+
+from code.const import WIN_WIDTH, WIN_HEIGHT, C_WHITE, C_GREEN, C_RED
 from code.player import Player
 from code.background import Background
 from code.obstacle import Obstacle
-from code.const import WIN_WIDTH, WIN_HEIGHT, ENTITY_SPEED
+from code.score import Score
 
 class Level:
-    def __init__(self, screen, name: str, player_score: list):
-        self.screen = screen
-        self.name = name
-        self.width = self.screen.get_width()
-        self.height = self.screen.get_height()
+    def __init__(self, window):
+        self.window = window
         self.clock = pygame.time.Clock()
-
-        # Player inicializado no meio da tela, ajustando altura
-        temp_player = Player("Player", (50, 0))
-        self.player = Player("Player", (50, WIN_HEIGHT//2 - temp_player.surf.get_height()//2))
-
-        # Obstacles
+        self.bg1 = Background("Bg1", (0, 0))
+        self.bg2 = Background("Bg1", (WIN_WIDTH, 0))
         self.obstacles = []
+        self.spawn_timer = 30
+        self.player = Player("Player", (100, WIN_HEIGHT // 2))
+        self.score_manager = Score(window)
 
-        # Background (4 imagens lado a lado)
-        self.backgrounds = [
-            Background("Bg1", (0, 0)),
-            Background("Bg2", (WIN_WIDTH, 0)),
-            Background("Bg3", (WIN_WIDTH*2, 0)),
-            Background("Bg4", (WIN_WIDTH*3, 0)),
-        ]
+    def spawn_obstacles(self):
+        import random
+        x = WIN_WIDTH + 10
+        if random.choice([True, False]):
+            self.obstacles.append(Obstacle(x, "cloud"))
+        else:
+            self.obstacles.append(Obstacle(x, "fence"))
 
-        # Score
-        self.score = 0
-        self.font = pygame.font.SysFont("Arial", 32)
+    def reset_game(self):
+        self.player = Player("Player", (100, WIN_HEIGHT // 2))
+        self.obstacles = []
+        self.spawn_timer = 0
+        self.bg1 = Background("Bg1", (0, 0))
+        self.bg2 = Background("Bg1", (WIN_WIDTH, 0))
 
-        # High Score
-        try:
-            with open("highscore.txt", "r") as f:
-                self.high_score = int(f.read())
-        except:
-            self.high_score = 0
+    def game_over_screen(self, player_score):
+        pygame.mixer.music.stop()
+        self.score_manager.save(player_score)
 
-    def draw_scores(self):
-        if self.score > self.high_score:
-            self.high_score = self.score
-            with open("highscore.txt", "w") as f:
-                f.write(str(self.high_score))
+        font_large = pygame.font.SysFont("Lucida Sans Typewriter", 48)
+        font_small = pygame.font.SysFont("Lucida Sans Typewriter", 28)
+        game_over_text = font_large.render("GAME OVER", True, C_RED)
+        score_text = font_small.render(f"Final Score: {player_score}", True, C_WHITE)
+        play_again_text = font_small.render("Press ENTER to Play Again or ESC to Exit", True, C_WHITE)
 
-        high_score_text = self.font.render(f"High Score: {self.high_score}", True, (255,255,255))
-        current_score_text = self.font.render(f"Score: {self.score}", True, (255,255,255))
+        self.window.fill((135, 206, 235))
+        self.bg1.draw(self.window)
+        self.bg2.draw(self.window)
+        self.window.blit(game_over_text, (WIN_WIDTH // 2 - game_over_text.get_width() // 2, WIN_HEIGHT // 3))
+        self.window.blit(score_text, (WIN_WIDTH // 2 - score_text.get_width() // 2, WIN_HEIGHT // 2))
+        self.window.blit(play_again_text, (WIN_WIDTH // 2 - play_again_text.get_width() // 2, WIN_HEIGHT // 1.5))
+        pygame.display.flip()
 
-        self.screen.blit(high_score_text, (10,10))
-        self.screen.blit(current_score_text, (10,50))
-
-    def run(self, player_score: list):
-        pygame.mixer.music.load('./asset/Game.mp3')
-        pygame.mixer.music.set_volume(0.3)
-        pygame.mixer.music.play(-1)
-
-        running = True
-        while running:
-            self.clock.tick(60)
-            self.screen.fill((0,0,0))
-
-            # Eventos
+        waiting = True
+        while waiting:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    self.player.jump()
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        return True
+                    if event.key == pygame.K_ESCAPE:
+                        return False
 
-            # Background
-            for bg in self.backgrounds:
-                bg.move()
-                bg.draw(self.screen)
+    def run(self, player_score=0):
+        pygame.mixer.music.load('./asset/Game.mp3')
+        pygame.mixer.music.set_volume(0.4)
+        pygame.mixer.music.play(-1)
+        running = True
+        difficulty_level = 0
+        difficulty_timer = 0
+        font_score = font.SysFont("Arial", 28)
 
-            # Player
+        while running:
+            self.clock.tick(60)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.player.jump()
+
+            # Aumenta dificuldade a cada 10 segundos (~600 frames)
+            difficulty_timer += 1
+            if difficulty_timer % 600 == 0:
+                difficulty_level += 1
+
+            self.bg1.move()
+            self.bg2.move()
             self.player.move()
-            self.player.draw(self.screen)
 
-            # Spawn de obstáculos fora da tela
-            if not self.obstacles or \
-               (self.obstacles[-1].top_rect and self.obstacles[-1].top_rect.x < self.width - 200) or \
-               (self.obstacles[-1].bottom_rect and self.obstacles[-1].bottom_rect.x < self.width - 200):
+            # Game Over por sair da tela
+            if self.player.is_dead(WIN_HEIGHT):
+                restart = self.game_over_screen(player_score)
+                if restart:
+                    self.reset_game()
+                    player_score = 0
+                    pygame.mixer.music.play(-1)
+                    continue
+                else:
+                    break
 
-                obstacle_type = random.choice(["fence","cloud"])
-                self.obstacles.append(Obstacle(self.width + 100, obstacle_type=obstacle_type))
+            self.spawn_timer += 1
+            if self.spawn_timer >= max(20, 60 - difficulty_level):
+                self.spawn_obstacles()
+                self.spawn_timer = 0
 
-            # Atualiza obstáculos
             for obs in self.obstacles:
                 obs.update()
-                obs.draw(self.screen)
-
                 if obs.collide(self.player):
-                    running = False
-
+                    restart = self.game_over_screen(player_score)
+                    if restart:
+                        self.reset_game()
+                        player_score = 0
+                        pygame.mixer.music.play(-1)
+                        break
+                    else:
+                        running = False
+                        break
                 if obs.passed(self.player.rect.x):
-                    self.score += 1
+                    player_score += 1
 
             # Remove obstáculos fora da tela
-            self.obstacles = [
-                obs for obs in self.obstacles
-                if (obs.top_rect and obs.top_rect.x + obs.width > 0) or
-                   (obs.bottom_rect and obs.bottom_rect.x + obs.width > 0)
-            ]
+            self.obstacles = [obs for obs in self.obstacles if (obs.top_rect and obs.top_rect.right > 0) or
+                              (obs.bottom_rect and obs.bottom_rect.right > 0)]
 
-            # Checa se player morreu
-            if self.player.is_dead(WIN_HEIGHT):
-                running = False
+            # --- Renderização ---
+            self.window.fill((135, 206, 235))
+            self.bg1.draw(self.window)
+            self.bg2.draw(self.window)
+            for obs in self.obstacles:
+                obs.draw(self.window)
+            self.player.draw(self.window)
 
-            # Desenha scores
-            self.draw_scores()
+            # Mostra High Score e Score atual
+            high_score = self.score_manager.get_record()
+            high_score_text = font_score.render(f"High Score: {high_score}", True, (255, 255, 0))
+            self.window.blit(high_score_text, (20, 20))
 
-            # Atualiza tela
+            score_text = font_score.render(f"Score: {player_score}", True, (255, 255, 255))
+            self.window.blit(score_text, (20, 50))
+
             pygame.display.flip()
 
-        # Salva score final
-        player_score[0] = self.score
-        return False
+        return True
+
+    def menu_text(self, text_size: int, text: str, text_color: tuple, text_center_pos: tuple):
+        text_font: Font = pygame.font.SysFont("Lucida Sans Typewriter", text_size)
+        text_surf: Surface = text_font.render(text, True, text_color).convert_alpha()
+        text_rect: Rect = text_surf.get_rect(center=text_center_pos)
+        self.window.blit(text_surf, text_rect)

@@ -21,11 +21,11 @@ class Game:
             menu_return = menu.run()
 
             if menu_return == "PLAY":
-                player_score = [0]  # apenas um jogador
-                level = Level(self.window, "Level1", player_score)
+                player_score = 0
+                level = Level(self.window)
                 level_return = level.run(player_score)
 
-                if level_return:  # se ganhou / passou
+                if level_return:
                     score.save(player_score)
 
             elif menu_return == "SCORE":

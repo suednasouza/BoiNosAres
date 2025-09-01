@@ -1,9 +1,16 @@
 from code.entity import Entity
 import pygame
 
+
 class Player(Entity):
+    base_surf = None
+
     def __init__(self, name: str, position: tuple):
         super().__init__(name, position)
+        if not Player.base_surf:
+            Player.base_surf = pygame.transform.scale(self.surf, (80, 60))
+        self.surf = Player.base_surf
+        self.rect = self.surf.get_rect(topleft=position)
         self.vel = 0
         self.gravity = 0.5
         self.jump_power = -8
