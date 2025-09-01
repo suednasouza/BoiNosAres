@@ -23,5 +23,4 @@ class Player(Entity):
         self.vel = self.jump_power
 
     def is_dead(self, screen_height):
-        # player morre apenas se sair da tela
         return self.rect.top < 0 or self.rect.bottom > screen_height

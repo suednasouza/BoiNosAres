@@ -2,11 +2,12 @@ import pygame
 from pygame import Surface, Rect, font
 from pygame.font import Font
 
-from code.const import WIN_WIDTH, WIN_HEIGHT, C_WHITE, C_GREEN, C_RED
+from code.const import WIN_WIDTH, WIN_HEIGHT, C_WHITE, C_RED
 from code.player import Player
 from code.background import Background
 from code.obstacle import Obstacle
 from code.score import Score
+
 
 class Level:
     def __init__(self, window):
@@ -83,7 +84,6 @@ class Level:
                     if event.key == pygame.K_SPACE:
                         self.player.jump()
 
-            # Aumenta dificuldade a cada 10 segundos (~600 frames)
             difficulty_timer += 1
             if difficulty_timer % 600 == 0:
                 difficulty_level += 1
@@ -92,7 +92,6 @@ class Level:
             self.bg2.move()
             self.player.move()
 
-            # Game Over por sair da tela
             if self.player.is_dead(WIN_HEIGHT):
                 restart = self.game_over_screen(player_score)
                 if restart:
@@ -123,11 +122,9 @@ class Level:
                 if obs.passed(self.player.rect.x):
                     player_score += 1
 
-            # Remove obstáculos fora da tela
             self.obstacles = [obs for obs in self.obstacles if (obs.top_rect and obs.top_rect.right > 0) or
                               (obs.bottom_rect and obs.bottom_rect.right > 0)]
 
-            # --- Renderização ---
             self.window.fill((135, 206, 235))
             self.bg1.draw(self.window)
             self.bg2.draw(self.window)
@@ -135,7 +132,6 @@ class Level:
                 obs.draw(self.window)
             self.player.draw(self.window)
 
-            # Mostra High Score e Score atual
             high_score = self.score_manager.get_record()
             high_score_text = font_score.render(f"High Score: {high_score}", True, (255, 255, 0))
             self.window.blit(high_score_text, (20, 20))

@@ -18,7 +18,7 @@ class Menu:
         pygame.mixer.music.set_volume(0.4)
         pygame.mixer.music.play(-1)
 
-        state = "menu"   # <- começa no menu
+        state = "menu"
         options = ["PLAY", "EXIT"]
         selected = 0
 
@@ -38,7 +38,7 @@ class Menu:
                             selected = (selected + 1) % len(options)
                         elif event.key == pygame.K_RETURN:
                             if options[selected] == "PLAY":
-                                state = "instructions"  # troca de tela
+                                state = "instructions"
                             else:
                                 return "EXIT"
 

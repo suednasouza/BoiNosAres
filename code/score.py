@@ -2,6 +2,7 @@ import pygame
 import os
 from pygame import Surface
 
+
 class Score:
     def __init__(self, screen: Surface):
         self.screen = screen

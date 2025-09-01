@@ -2,8 +2,9 @@ import pygame
 import random
 from code.const import OBSTACLE1, OBSTACLE2, WIN_HEIGHT
 
+
 class Obstacle:
-    def __init__(self, x, obstacle_type="fence", width=100, gap=150):
+    def __init__(self, x, obstacle_type="fence", width=100):
         self.type = obstacle_type
         self.width = width
         self.speed = 5
